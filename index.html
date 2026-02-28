@@ -3,223 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor Visual de Sargazo | Q. Roo</title>
+    <title>Monitor Global de Sargazo | NOAA Data</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root {
-            --caribbean-cyan: #00e5ff;
-            --deep-blue: #004e92;
-            --sand-bg: #fffdf7;
-            /* Colores del Sargazo (con transparencia para el efecto de llenado) */
-            --sargazo-alto: rgba(165, 42, 42, 0.85); /* Café rojizo intenso */
-            --sargazo-medio: rgba(218, 165, 32, 0.75); /* Dorado ocre */
-            --sargazo-bajo: rgba(144, 238, 144, 0.6); /* Verde claro arenoso */
-        }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: var(--sand-bg);
-            overflow-x: hidden;
-        }
-
-        /* --- Héroe con Oleaje Turquesa Vibrante --- */
-        .hero-section {
-            position: relative;
-            /* Degradado potente estilo Caribe */
-            background: linear-gradient(135deg, var(--deep-blue) 0%, var(--caribbean-cyan) 100%);
-            color: white;
-            padding-top: 5rem;
-            padding-bottom: 10rem; /* Espacio para las olas */
-        }
-
-        .hero-title {
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
-        }
-
-        /* --- Olas SVG en la parte inferior --- */
-        .wave-container {
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            width: 100%;
-            overflow: hidden;
-            line-height: 0;
-        }
-
-        .wave-fill {
-            fill: var(--sand-bg); /* Color de la arena para fusionarse */
-        }
-
-        /* --- Contenedor Principal --- */
-        .main-content {
-            position: relative;
-            z-index: 10;
-            margin-top: -80px; /* Subimos el contenido sobre las olas */
-        }
-
-        /* --- EFECTO DE "PECERA" O TANQUE LLENO --- */
-        .sargazo-card {
-            position: relative;
-            border: none;
-            border-radius: 25px;
-            overflow: hidden; /* Vital para contener el "líquido" */
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            background: white; /* Fondo base limpio */
-            transition: transform 0.4s ease;
-            height: 100%;
-        }
-
-        .sargazo-card:hover {
-            transform: translateY(-10px) scale(1.02);
-        }
-
-        /* Esta es la capa que se "llena". Usamos variables CSS dinámicas. */
-        .liquid-fill {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            /* La altura y el color se definen en el JavaScript según el dato */
-            height: var(--fill-height, 10%); 
-            background: linear-gradient(to top, var(--fill-color), transparent);
-            opacity: 0.9;
-            z-index: 1;
-            transition: height 1.5s cubic-bezier(0.25, 0.8, 0.25, 1); /* Animación de llenado suave */
-            border-radius: 0 0 25px 25px;
-        }
-
-        /* Ondas sutiles sobre el líquido para dar textura */
-        .liquid-fill::before {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: 0;
-            width: 100%;
-            height: 20px;
-            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(255,255,255,0.3)"/></svg>');
-            background-size: cover;
-            opacity: 0.5;
-        }
-
-        .card-content {
-            position: relative;
-            z-index: 2; /* El texto debe estar SOBRE el líquido */
-            padding: 2rem;
-        }
-
-        .data-badge {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-weight: 700;
-            color: white;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        body { background-color: #f2e8c9; font-family: 'Montserrat', sans-serif; }
+        .hero { background: linear-gradient(135deg, #004e92, #00e5ff); color: white; padding: 25px 0; }
+        /* El contenedor del mapa DEBE tener una altura definida */
+        #mapa-sargazo { height: 65vh; width: 100%; border-radius: 12px; border: 4px solid #dcc69a; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1;}
+        .info-panel { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #004e92; }
     </style>
 </head>
 <body>
-
-    <header class="hero-section text-center">
-        <div class="container">
-            <h1 class="display-4 hero-title">Monitor de Sargazo 2026</h1>
-            <p class="lead fs-4 fw-bold" style="color: var(--caribbean-cyan);">Telemetría Costera en Tiempo Real</p>
-        </div>
-        <div class="wave-container">
-            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                <path class="wave-fill" d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
-            </svg>
-        </div>
+    <header class="hero text-center mb-4">
+        <h2 class="fw-bold">Telemetría Global de Sargazo</h2>
+        <p class="mb-0">Consumo en tiempo real de la API ERDDAP (NOAA / USF)</p>
     </header>
 
-    <main class="container main-content pb-5">
-        <div id="grid-playas" class="row justify-content-center g-4">
-            <div class="text-center py-5">
-                <div class="spinner-grow text-info" role="status" style="width: 3rem; height: 3rem;"></div>
-                <p class="mt-3 fw-bold text-muted">Sincronizando con API Local...</p>
+    <div class="container pb-5">
+        <div class="info-panel d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <small class="text-muted d-block fw-bold">ESTADO DE CONEXIÓN CON SATÉLITE NOAA:</small>
+                <span id="status-satelite" class="text-primary fw-bold">Iniciando protocolo de enlace...</span>
             </div>
+            <button class="btn btn-dark fw-bold" onclick="cargarMapa()">🔄 Actualizar Radar</button>
         </div>
-    </main>
+        
+        <div id="mapa-sargazo"></div>
+    </div>
 
     <script>
-        async function cargarTableroVisual() {
-            const grid = document.getElementById('grid-playas');
-            
+        // 1. Inicializar el mapa centrado en el Mar Caribe para ver todo el panorama
+        const map = L.map('mapa-sargazo').setView([18.0, -70.0], 4);
+        
+        // 2. Cargar los mosaicos del mapa (El diseño visual geográfico)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap | Datos: NOAA CoastWatch'
+        }).addTo(map);
+
+        // Capa para agrupar las manchas de sargazo
+        let capaSargazo = L.layerGroup().addTo(map);
+
+        async function cargarMapa() {
+            document.getElementById('status-satelite').innerText = "Consumiendo API de la NOAA...";
+            capaSargazo.clearLayers(); 
+
             try {
-                // 1. Consumimos los datos de tu API
+                // Tu front-end consume a tu servidor, y tu servidor consumió a la NOAA
                 const res = await fetch('/api/monitoreo-sargazo');
                 const data = await res.json();
                 
-                grid.innerHTML = ''; // Limpiamos el cargador
+                // Mostrar el timestamp real extraído del satélite
+                document.getElementById('status-satelite').innerHTML = `<span class="text-success">✅ En Línea</span> | Última lectura satelital: <b>${data.satelite_timestamp}</b>`;
 
-                // 2. Recorremos cada playa y calculamos cuánto "llenar" la tarjeta
-                data.alertas.forEach((a, index) => {
-                    let fillHeight = '25%'; // Valor por defecto (BAJO)
-                    let fillColor = 'var(--sargazo-bajo)';
-                    let badgeColor = '#198754'; // Verde
+                // Dibujar las zonas en el mapa
+                data.alertas.forEach(zona => {
+                    let colorMancha = '#198754'; // Verde
+                    let radioMancha = 150000; // Metros de radio
 
-                    // Lógica de llenado según el nivel de inundación
-                    if (a.nivel_inundacion === 'MEDIO') {
-                        fillHeight = '60%';
-                        fillColor = 'var(--sargazo-medio)';
-                        badgeColor = '#d4a017'; // Ocre/Amarillo oscuro
-                    } else if (a.nivel_inundacion === 'ALTO') {
-                        fillHeight = '95%'; // Casi lleno
-                        fillColor = 'var(--sargazo-alto)';
-                        badgeColor = '#dc3545'; // Rojo
-                    }
+                    if (zona.nivel === 'MEDIO') { colorMancha = '#ffc107'; radioMancha = 300000; }
+                    if (zona.nivel === 'ALTO') { colorMancha = '#dc3545'; radioMancha = 500000; }
 
-                    // Creamos la estructura HTML de la tarjeta "pecera"
-                    const col = document.createElement('div');
-                    col.className = 'col-lg-6 col-xl-5';
-                    // Agregamos un pequeño retraso a la animación de cada tarjeta para que se vea fluido
-                    col.style.animation = `fadeInUp 0.6s ease forwards ${index * 0.1}s`;
-                    col.style.opacity = '0';
+                    // Crear el círculo en las coordenadas exactas
+                    const circulo = L.circle([zona.lat, zona.lng], {
+                        color: colorMancha,
+                        fillColor: colorMancha,
+                        fillOpacity: 0.5,
+                        radius: radioMancha
+                    });
 
-                    col.innerHTML = `
-                        <div class="card sargazo-card h-100">
-                            <div class="liquid-fill" style="--fill-height: ${fillHeight}; --fill-color: ${fillColor};"></div>
-                            
-                            <div class="card-body card-content text-center d-flex flex-column justify-content-center">
-                                <h2 class="h3 fw-bolder mb-1">${a.playa}</h2>
-                                <p class="text-muted fw-bold mb-4 small text-uppercase ls-1">${a.municipio}</p>
-                                
-                                <div class="row align-items-end">
-                                    <div class="col-6 border-end border-2">
-                                        <small class="d-block text-muted fw-bold mb-1">ESTADO</small>
-                                        <span class="data-badge" style="background-color: ${badgeColor}">${a.nivel_inundacion}</span>
-                                    </div>
-                                    <div class="col-6">
-                                        <small class="d-block text-muted fw-bold mb-1">BIOMASA EST.</small>
-                                        <span class="fs-2 fw-black" style="color: ${badgeColor}">${a.biomasa_estimada_tons}</span>
-                                        <small class="fw-bold text-muted">Tons</small>
-                                    </div>
-                                </div>
-                            </div>
+                    // Añadir información al hacer clic en la mancha
+                    circulo.bindPopup(`
+                        <div class="text-center p-2">
+                            <h6 class="fw-bold mb-1">${zona.region}</h6>
+                            <hr class="my-1">
+                            <span class="badge bg-dark mb-2">Alerta: ${zona.nivel}</span><br>
+                            <small class="text-muted">Biomasa / Estado:</small><br>
+                            <strong class="text-danger">${zona.biomasa}</strong>
                         </div>
-                    `;
-                    grid.appendChild(col);
+                    `);
+
+                    capaSargazo.addLayer(circulo);
                 });
             } catch (error) {
-                grid.innerHTML = `
-                    <div class="col-12 text-center pt-5">
-                        <h3 class="text-danger fw-bold">⚠️ Error de Conexión</h3>
-                        <p class="text-muted">No se pudo establecer comunicación con la API local.</p>
-                    </div>
-                `;
+                document.getElementById('status-satelite').innerHTML = '<span class="text-danger fw-bold">❌ Error de conexión satelital</span>';
             }
         }
 
-        // Agregamos la animación de entrada CSS
-        const styleSheet = document.createElement("style");
-        styleSheet.innerText = `@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }`;
-        document.head.appendChild(styleSheet);
-
-        window.onload = cargarTableroVisual;
+        // Cargar los datos al abrir la página
+        window.onload = cargarMapa;
     </script>
 </body>
 </html>
