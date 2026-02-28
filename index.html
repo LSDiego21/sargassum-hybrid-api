@@ -11,7 +11,7 @@
     <style>
         body { background-color: #f2e8c9; font-family: 'Montserrat', sans-serif; }
         .hero { background: linear-gradient(135deg, #004e92, #00e5ff); color: white; padding: 25px 0; }
-        /* El contenedor del mapa DEBE tener una altura definida */
+        /* Altura del mapa definida */
         #mapa-sargazo { height: 65vh; width: 100%; border-radius: 12px; border: 4px solid #dcc69a; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1;}
         .info-panel { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #004e92; }
     </style>
@@ -51,11 +51,11 @@
             capaSargazo.clearLayers(); 
 
             try {
-                // Tu front-end consume a tu servidor, y tu servidor consumió a la NOAA
+                // front-end consumiendo el servidor, y el servidor consumió a la NOAA
                 const res = await fetch('/api/monitoreo-sargazo');
                 const data = await res.json();
                 
-                // Mostrar el timestamp real extraído del satélite
+                // Mostrar el mapa en tiempo real extraído del satélite
                 document.getElementById('status-satelite').innerHTML = `<span class="text-success">✅ En Línea</span> | Última lectura satelital: <b>${data.satelite_timestamp}</b>`;
 
                 // Dibujar las zonas en el mapa
@@ -66,7 +66,7 @@
                     if (zona.nivel === 'MEDIO') { colorMancha = '#ffc107'; radioMancha = 300000; }
                     if (zona.nivel === 'ALTO') { colorMancha = '#dc3545'; radioMancha = 500000; }
 
-                    // Crear el círculo en las coordenadas exactas
+                    // Creación el círculo en las coordenadas exactas
                     const circulo = L.circle([zona.lat, zona.lng], {
                         color: colorMancha,
                         fillColor: colorMancha,
@@ -74,7 +74,7 @@
                         radius: radioMancha
                     });
 
-                    // Añadir información al hacer clic en la mancha
+                    // Información de la zona al hacer clic en la mancha
                     circulo.bindPopup(`
                         <div class="text-center p-2">
                             <h6 class="fw-bold mb-1">${zona.region}</h6>

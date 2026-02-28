@@ -29,7 +29,7 @@
     </binding>
     <service name="SargassumTelemetryService">
         <port name="TelemetryPort" binding="tns:TelemetryBinding">
-            <soap:address location="http://localhost:10000/wsdl"/>
+            <soap:address location="https://sargassum-hybrid-api.onrender.com/wsdl"/>
         </port>
     </service>
 </definitions>
